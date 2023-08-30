@@ -9,22 +9,15 @@ options(scipen=999)
 
 # Load data
 
-setwd("/Users/izabelejonusaite/Documents/GitHub/InvisibleHand/data")
 ihdata_e1 <- read.csv("IH_Experiment1_Data.csv", 
                       header = TRUE, 
                       sep = ",", 
                       stringsAsFactors = FALSE
 )
 
-# Delete first column (the first column has to be "Total_Time")
+### Data cleaning ###
 
-ihdata_e1 <- ihdata_e1[,-1]
-
-##################### Data cleaning #####################
-
-## Exclude participants with half or more responses given in =< 5 seconds
-
-lastclicks <- ihdata_e1[,c(3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41)]
+lastclicks <- ihdata_e1[,c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40)]
 
 for(i in 1:length(lastclicks[,1])) {
   lastclicks[i,] <- gsub(",", ".", lastclicks[i,])
@@ -56,6 +49,7 @@ exclude <- as.numeric(exclude)
 
 ihdata_e1 <- ihdata_e1[-c(exclude),]
 
+
 ## Print number of excluded participants and number of participants in the final dataset
 ## Print which rows were excluded
 
@@ -63,11 +57,10 @@ print(paste("Number of excluded participants:", length(exclude)))
 print(paste("Number of participants in the final dataset:", length(ihdata_e1[,1])))
 print(paste("Rows excluded:", exclude))
 
-##################### Data analysis #####################
 
 # Calculate average total time taken to complete the experiment
 
-total_time <- ihdata_e1[,42]
+total_time <- ihdata_e1[,56]
 total_time <- as.numeric(as.character(total_time))
 total_time <- mean(total_time)
 
@@ -75,12 +68,11 @@ total_time <- mean(total_time)
 
 print(paste("Average total time taken to complete the experiment:", total_time))
 
-# Compare IH and ID likelihood means within participants
-
 ## Create a new dataframe with only the likelihood data
 
-ihdata_e1_IH_Likelihoods <- ihdata_e1[,c(2, 6, 10, 14, 18, 22, 26, 30, 34, 38)]
-ihdata_e1_ID_Likelihoods <- ihdata_e1[,c(4, 8, 12, 16, 20, 24, 28, 32, 36, 40)]
+ihdata_e1_IH_Likelihoods <- ihdata_e1[,c(1, 5, 9, 13, 17, 21, 25, 29, 33, 37)]
+ihdata_e1_ID_Likelihoods <- ihdata_e1[,c(3, 7, 11, 15, 19, 23, 27, 31, 35, 39)]
+
 
 ## Convert the data to numeric
 
@@ -109,6 +101,7 @@ shapiro.test(ihdata_e1_IH_ID_Likelihoods_mean$ihdata_e1_ID_Likelihoods_mean)
 ## Test the difference between the means of IH and ID likelihoods, using a paired t-test
 
 t.test(ihdata_e1_IH_ID_Likelihoods_mean$ihdata_e1_IH_Likelihoods_mean, ihdata_e1_IH_ID_Likelihoods_mean$ihdata_e1_ID_Likelihoods_mean, paired = TRUE, alternative = "two.sided")
+
 
 ##################### Data visualization #####################
 
@@ -184,3 +177,42 @@ ihe1_panelplot <- ggplot(ih_e1_plotdata, aes(x=likelihood)) +
 
 ggsave("ih_e1_panelplot.pdf", plot = ihe1_panelplot, width = 10, height = 5)
 
+## Correlation test between average GCB score per participant and the difference between the means of IH and ID likelihoods per participant
+
+# select GCB columns
+ihdata_e1_gcb <- ihdata_e1[,41:55]
+
+## Calculate the average GCB score per participant
+
+ihdata_e1_gcb_mean <- apply(ihdata_e1_gcb, 1, mean)
+
+## Calculate the difference between the means of IH and ID likelihoods per participant
+
+ihdata_e1_IH_ID_Likelihoods_mean_diff <- ihdata_e1_IH_Likelihoods_mean - ihdata_e1_ID_Likelihoods_mean
+
+## Create a dataframe with the average GCB score and the difference between the means of IH and ID likelihoods per participant
+
+ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff <- data.frame(ihdata_e1_gcb_mean, ihdata_e1_IH_ID_Likelihoods_mean_diff)
+
+## Test the correlation between the average GCB score and the difference between the means of IH and ID likelihoods
+
+cor.test(ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff$ihdata_e1_gcb_mean, ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff$ihdata_e1_IH_ID_Likelihoods_mean_diff, method = "pearson", alternative = "two.sided")
+
+# print the correlation coefficient
+
+print(paste("Correlation coefficient:", cor.test(ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff$ihdata_e1_gcb_mean, ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff$ihdata_e1_IH_ID_Likelihoods_mean_diff, method = "pearson", alternative = "two.sided")$estimate))
+
+# create a scatterplot of the correlation between the average GCB score and the difference between the means of IH and ID likelihoods
+
+ggscatter(ihdata_e1_gcb_IH_ID_Likelihoods_mean_diff, x = "ihdata_e1_gcb_mean", y = "ihdata_e1_IH_ID_Likelihoods_mean_diff", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Average GCB score", ylab = "Difference between the means of IH and ID likelihoods")
+
+# export the correlation plot to a pdf file
+
+ggsave("ih_e1_gcb_IH_ID_Likelihoods_mean_diff_correlation.pdf", plot = last_plot(), width = 5, height = 5)
+
+# export the correlation plot to a png file
+
+ggsave("ih_e1_gcb_IH_ID_Likelihoods_mean_diff_correlation.png", plot = last_plot(), width = 5, height = 5)
