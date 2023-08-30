@@ -9,4 +9,4 @@ The order of presentation of vignettes and explanation types was randomized.
 * `Qi`: The participant response to vignette i and the associated IH and ID explanations. A value of 1 indicates choosing the IH, a value of -1 indicates choosing the ID. 
 * `Qi_time`: The time it took the participant to make their choice for vignette i. 
 * `Total_Time`: The time (in seconds) it took the participant to answer the questions. 
-* `GCB_i`: Participant agreement with statement i in the General Conspiratorial Belief scale, from 1 to 7.  
+* `GCB_i`: Participant agreement with statement i in the General Conspiratorial Belief scale, from 1 to 5.  
